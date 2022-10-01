@@ -2,13 +2,25 @@ import myfitnesspal
 from MyFoodItem import MyFoodItem
 import re
 
-# Filter list to only list containing container or package terms in servings with grams 
+
+# Filter list to only those items with grams in the name or container / package serving
 def extractUsableFoodItems(food_items):
     new_food_items = []
     for item in food_items:
+        # Check if grams are found in the food item name
+        if ("grams" in item.name) or ("g" in item.name):
+            grams = extractUsableGramsFromFoodItem(item.name)
+            #print(type(item))
+            mfi = MyFoodItem(item.name, item.brand, item.verified, item.calories, grams)
+            new_food_items.append(mfi)
+            #print(serving.unit)
+            continue
+        # Check if grams are found in the food item servings (for containers or packages)
         for serving in item.servings:
             #print(type(serving.unit))
-            if ("container" in serving.unit) and (("grams" in serving.unit) or ("g" in serving.unit)):
+            if ("container" in serving.unit) and (
+                ("grams" in serving.unit) or ("g" in serving.unit)
+                ):
                 grams = extractUsableGramsFromFoodItem(serving.unit)
                 #print(type(item))
                 mfi = MyFoodItem(item.name, item.brand, item.verified, item.calories, grams)
@@ -16,6 +28,7 @@ def extractUsableFoodItems(food_items):
                 #print(serving.unit)
                 continue
     return new_food_items
+
 
 # Extract grams measurements from food items using regex
 def extractUsableGramsFromFoodItem(item):
@@ -35,11 +48,13 @@ def extractUsableGramsFromFoodItem(item):
         print(e)
     return grams
 
+
 # Calculate quantities of each food item required to satisfy recipe
 def calculateQuantities(recipe_quantity, food_items):
     #quantities = []
     for item in food_items:
         item.quantity_needed = round(recipe_quantity / item.grams, 2)
+
 
 # Pretty print MyFoodItem
 def pprintFoodItem(items):
@@ -55,6 +70,7 @@ def pprintFoodItem(items):
             item.verified
         ))
 
+
 # Pretty print MFP Food Item
 def pprintMFPFoodItem(items):
     for item in items:
@@ -68,13 +84,19 @@ def pprintMFPFoodItem(items):
 
 client = myfitnesspal.Client()
 
-food_items = client.get_food_search_results("cream cheese")
+print("Enter food item: ")
+search = input()
+print("Enter quantity needed (g): ")
+recipeQuantity = input()
+
+food_items = client.get_food_search_results(search)
 #print(dir(food_items[0]))
 pprintMFPFoodItem(food_items)
 
 foodItems = extractUsableFoodItems(food_items)
 
-recipeQuantity = 220.0 # 220g of cream cheese needed in recipe
+#recipeQuantity = 220.0 # 220g of cream cheese needed in recipe
+recipeQuantity = float(recipeQuantity)
 calculateQuantities(recipeQuantity, foodItems)
 
 print(type(foodItems))
